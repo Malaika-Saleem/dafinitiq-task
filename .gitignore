@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.env
+.env.local
+.env.*.local
+venv/
+.venv/
+
+# Virtualenv
+venv/
+.venv/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Node
+node_modules/
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# Database
+*.sqlite3
+voice_agent.db
+
+# Mac
+.DS_Store
+
+# Secrets
+secrets.yml
+

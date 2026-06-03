@@ -1,0 +1,29 @@
+{
+  "name": "restaurant-voice-ai-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tailwindcss": "^3.4.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0",
+    "clsx": "^1.2.1",
+    "lucide-react": "^0.254.0",
+    "react-hook-form": "^7.45.0",
+    "zod": "^3.23.2",
+    "@hookform/resolvers": "^2.9.11"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/react": "^18.2.21",
+    "@types/node": "^20.4.2"
+  }
+}
