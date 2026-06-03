@@ -2,6 +2,7 @@ import re
 from typing import List, Dict, Any
 from pathlib import Path
 import json
+import re
 
 MENU_PATH = Path.cwd() / "menu.json"
 _MENU = None
@@ -87,3 +88,63 @@ def compute_drift_score(response_text: str, menu: Dict[str, Any]) -> float:
             break
 
     return round(max(0.0, min(1.0, score)), 2)
+
+
+def extract_order_from_text(resp_text: str, menu: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Attempt to extract a structured order from `resp_text`.
+    Strategy:
+      1. Try to find a JSON blob in the text and parse it. Validate items against the menu.
+      2. If no valid JSON, use a regex fallback to find patterns like "2 plain bagels".
+
+    Returns a dict: {"items": [{"name", "quantity", "price"}], "total": number}
+    Unknown items are ignored.
+    """
+    order = {"items": [], "total": 0.0}
+    if not resp_text:
+        return order
+
+    # normalize menu map: name(lower) -> item dict
+    menu_map = {}
+    for cat in menu.get("menu", {}).get("categories", []):
+        for item in cat.get("items", []):
+            name = item.get("name", "").strip().lower()
+            if name:
+                menu_map[name] = item
+
+    # 1) try JSON blob
+    m = re.search(r"\{.*\}", resp_text, flags=re.S)
+    if m:
+        try:
+            j = json.loads(m.group(0))
+            items = []
+            for it in j.get("items", []) if isinstance(j, dict) else []:
+                name = (it.get("name") or "").strip().lower()
+                if name in menu_map:
+                    qty = int(it.get("quantity", 1))
+                    # menu uses base_price
+                    price = float(menu_map[name].get("base_price", it.get("price", 0.0) or 0.0))
+                    items.append({"name": menu_map[name]["name"], "quantity": qty, "price": price})
+            if items:
+                total = sum(i["quantity"] * i["price"] for i in items)
+                return {"items": items, "total": round(total, 2)}
+        except Exception:
+            pass
+
+    # 2) regex fallback: look for patterns like '2 plain bagels'
+    found = []
+    text_l = resp_text.lower()
+    # sort menu names by length so longer names match first
+    names_sorted = sorted(menu_map.keys(), key=lambda x: -len(x))
+    for name in names_sorted:
+        pattern = r"(\d+)\s+" + re.escape(name)
+        for qty in re.findall(pattern, text_l):
+            q = int(qty)
+            price = float(menu_map[name].get("base_price", 0.0) or 0.0)
+            found.append({"name": menu_map[name]["name"], "quantity": q, "price": price})
+
+    if found:
+        total = sum(i["quantity"] * i["price"] for i in found)
+        return {"items": found, "total": round(total, 2)}
+
+    return order
